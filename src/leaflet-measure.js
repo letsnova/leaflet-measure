@@ -188,8 +188,8 @@ L.Control.Measure = L.Control.extend({
   // return to state with no measure in progress, undo `this._startMeasure`
   _finishMeasure: function() {
     const model = L.extend({}, this._resultsModel, { points: this._latlngs });
+    this.options.data.push({ points: this._latlngs });
     this._clearMeasure();
-
     this._map.fire('measurefinish', model, false);
   },
   // clear all running measure data
