@@ -55,6 +55,7 @@ L.Control.Measure = L.Control.extend({
     } else {
       this._import_data = this.options.data;
     }
+    this._measurements = [];
   },
   onAdd: function(map) {
     this._map = map;
@@ -66,6 +67,11 @@ L.Control.Measure = L.Control.extend({
       for (let i = 0; i < this._import_data.length; i++) {
         this._latlngs = this._import_data[i].points;
         this._handleMeasureDoubleClick();
+        // this._measurements.push(this._handleMeasureDoubleClick());
+        // // Костыль для удаления последней точки
+        // if (this._import_data[i].points.length > 2) {
+        //   this._import_data[i].points = this._import_data[i].points.splice(0, this._import_data[i].points.length - 1);
+        // }
       }
       map.closePopup();
     } else {
@@ -351,7 +357,7 @@ L.Control.Measure = L.Control.extend({
       return;
     }
 
-    if (latlngs.length > 2) {
+    if (latlngs.length > 2 && !this._measureVertexes) {
       latlngs.push(latlngs[0]); // close path to get full perimeter measurement for areas
     }
 
@@ -405,6 +411,11 @@ L.Control.Measure = L.Control.extend({
         'click',
         function() {
           // TODO. maybe remove any event handlers on zoom and delete buttons?
+          const rf = this._measurements.find(e => e.feature === resultFeature);
+          const itemIndex = this.options.data.findIndex(e => e.points === rf.points);
+          if (itemIndex !== -1) {
+            this.options.data.splice(itemIndex, 1);
+          }
           this._layer.removeLayer(resultFeature);
         },
         this
@@ -418,6 +429,8 @@ L.Control.Measure = L.Control.extend({
     } else if (resultFeature.getLatLng) {
       resultFeature.openPopup(resultFeature.getLatLng());
     }
+
+    this._measurements.push({ feature: resultFeature, points: latlngs });
   },
   // handle map click during ongoing measurement
   // add new clicked point, update measure layers and results ui
