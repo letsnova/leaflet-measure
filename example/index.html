@@ -60,7 +60,8 @@
     (function(L, document) {
       var map = L.map('map', {
           center: [29.749817, -95.080757],
-          zoom: 16
+          zoom: 16,
+          editable: true
       });
       L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         minZoom: 14,
@@ -108,7 +109,7 @@
           ]
         }
       ];
-      
+
       let options = {
         postion: "topright",
         primaryLengthUnit: "feet",

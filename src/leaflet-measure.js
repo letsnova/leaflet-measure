@@ -1,9 +1,10 @@
 import '../scss/leaflet-measure.scss';
 
 import template from 'lodash/template';
-
+import 'leaflet-editable';
 import units from './units';
-import calc from './calc';
+import { calc } from './calc';
+import { calculateLength } from './calc';
 import * as dom from './dom';
 import { selectOne as $ } from './dom';
 import Symbology from './symbology';
@@ -32,6 +33,7 @@ L.Control.Measure = L.Control.extend({
   options: {
     data: [],
     units: {},
+    showDistances: true,
     position: 'topright',
     primaryLengthUnit: 'feet',
     secondaryLengthUnit: 'miles',
@@ -59,6 +61,26 @@ L.Control.Measure = L.Control.extend({
   },
   onAdd: function(map) {
     this._map = map;
+
+    this._map.on('editable:created editable:editing', e => {
+      // eslint-disable-next-line no-console
+      console.log(e);
+      // let length;
+      // // проверяем сколько точек в замере, если больше одной, то будем добавлять инфу о длине линии
+      // if (this._latlngs.length){
+      //   length = calculateLength([lastClick.lat, lastClick.lng], [latlng.lat, latlng.lng]);
+      //   if (length){
+      //     const marker = new L.marker([(lastClick.lat+latlng.lat)/2, (lastClick.lng+latlng.lng)/2], {opacity: 1,
+      //       fillOpacity: 0,
+      //       fillColor:'black',
+      //       fill: 'false',
+      //       interactive: false})
+      //     marker.bindTooltip(length.toFixed(2).toString(), {permanent: true, direction: true});
+      //     marker.addTo(this._map);
+      //   }
+      // }
+    });
+
     this._initLayout();
     map.on('click', this._collapse, this);
     this._layer = L.layerGroup().addTo(map);
@@ -379,6 +401,8 @@ L.Control.Measure = L.Control.extend({
         model: L.extend({}, calced, this._getMeasurementDisplayStrings(calced))
       });
     }
+    // проверяем, что не точка (нет радиуса)
+    if (!resultFeature._radius) resultFeature.enableEdit(this._map);
 
     const popupContainer = L.DomUtil.create('div', '');
     popupContainer.innerHTML = popupContent;
@@ -438,6 +462,19 @@ L.Control.Measure = L.Control.extend({
     const latlng = this._map.mouseEventToLatLng(evt.originalEvent), // get actual latlng instead of the marker's latlng from originalEvent
       lastClick = this._latlngs[this._latlngs.length - 1],
       vertexSymbol = this._symbols.getSymbol('measureVertex');
+    let length;
+    // проверяем сколько точек в замере, если больше одной, то будем добавлять инфу о длине линии
+    if (this._latlngs.length) {
+      length = calculateLength([lastClick.lat, lastClick.lng], [latlng.lat, latlng.lng]);
+      if (length) {
+        const marker = new L.marker(
+          [(lastClick.lat + latlng.lat) / 2, (lastClick.lng + latlng.lng) / 2],
+          { opacity: 1, fillOpacity: 0, fillColor: 'black', fill: 'false', interactive: false }
+        );
+        marker.bindTooltip(length.toFixed(2).toString(), { permanent: true, direction: true });
+        marker.addTo(this._map);
+      }
+    }
 
     if (!lastClick || !latlng.equals(lastClick)) {
       // skip if same point as last click, happens on `dblclick`

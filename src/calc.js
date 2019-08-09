@@ -3,6 +3,7 @@
 
 import length from '@turf/length';
 import area from '@turf/area';
+import * as turf from '@turf/turf';
 
 function pad(num) {
   return num < 10 ? '0' + num.toString() : num.toString();
@@ -18,7 +19,7 @@ function ddToDms(coordinate, posSymbol, negSymbol) {
 }
 
 /* calc measurements for an array of points */
-export default function calc(latlngs) {
+export function calc(latlngs) {
   const last = latlngs[latlngs.length - 1];
   const path = latlngs.map(latlng => [latlng.lat, latlng.lng]);
 
@@ -42,3 +43,11 @@ export default function calc(latlngs) {
     area: sqMeters
   };
 }
+// функция для подсчета расстояния между точками
+export function calculateLength(from, to) {
+  const start = turf.point(from);
+  const end = turf.point(to);
+  return turf.distance(start, end, { units: 'kilometers' }) * 1000;
+}
+
+export default { calc, calculateLenght: calculateLength };
